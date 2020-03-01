@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>VeraBlog</title>
+	<link rel="icon" href="/images/19n5hnxh3i41583028504529.png">
+	<link rel="stylesheet" href="/index.css">
+	<script src="https://unpkg.com/jquery@3.3.1/dist/jquery.min.js"></script>
+	<script>
+		function fade(txt){
+			$('.message').text(txt)
+			$('.message').animate({
+				top:0
+			})
+			setTimeout(function(){
+				$('.message').animate({
+					top: '-100%'
+				})
+			},1500)
+		}
+		$(function(){
+			$('.signout').click(()=>{
+				$.ajax({
+					url: "/signout",
+					type: "GET",
+					cache: false,
+					dataType: 'json',
+					success: function (msg) {
+						if (msg) {
+							fade('登录成功')
+							setTimeout(()=>{
+								window.location.href = "/posts"
+							},1500)	
+						}
+					},
+					error: function () {
+						alert('异常');
+					}
+				})
+			})
+		})
+	</script>
+</head>
+<body>
+<%- include("header",{type:'posts'}) %>
+</body>
+</html> 
