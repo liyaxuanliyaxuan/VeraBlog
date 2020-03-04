@@ -44,6 +44,8 @@
   1. 获取请求
   2. 数据库操作
   3. 写body
+     - 如果是请求页面，进行页面渲染，使用render
+     - 如果是请求数据，直接给body赋值，如提交注册表单的操作
 - 
 
 #自定义中间件
@@ -63,4 +65,8 @@
 - EJS[模板语法解析](https://ejs.bootcss.com/#install)
 - 使用staticCache 后， 静态资源如样式表在引入ejs模板中的路径是相对于放置静态资源目录的路径
 - 未解决ejs模板引擎渲染的一个bug
-- 
+- 未解决发表文章字符串不合法的bug
+- SQL查询语句，不用区分关键字大小写，不用区分有无分号结尾。可以通过`Promise`打印数据库交互中的错误
+- 处理文章：replace方法
+  1. pattern：regexp|substr
+  2. replacement：newSubStr|function（函数默认参数是模式匹配下的命中目标）
