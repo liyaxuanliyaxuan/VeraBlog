@@ -116,5 +116,166 @@ router.post('/create',async( ctx, next) =>{
             })
 })
 
+// 单篇文章页
+router.get('/posts/:postId', async(ctx, next) => {
+    let comment_res,
+        res,
+        pageOne,
+        res_pv; 
+    await userModel.findDataById(ctx.params.postId)
+        .then(result => {
+            //console.log(result )
+            res = result
+            res_pv = parseInt(result[0]['pv'])
+            res_pv += 1
+           // console.log(res_pv)
+        })
+    await userModel.updatePostPv([res_pv, ctx.params.postId])
+    await userModel.findCommentByPage(1,ctx.params.postId)
+        .then(result => {
+            pageOne = result
+            //console.log('comment', comment_res)
+        })
+    await userModel.findCommentById(ctx.params.postId)
+        .then(result => {
+            comment_res = result
+            //console.log('comment', comment_res)
+        })
+    await ctx.render('sPost', {
+        session: ctx.session,
+        posts: res[0],
+        commentLenght: comment_res.length,
+        commentPageLenght: Math.ceil(comment_res.length/10),
+        pageOne:pageOne
+    })
+
+})
+
+// 发表评论
+router.post('/:postId', async(ctx, next) => {
+    let name = ctx.session.user,
+        content = ctx.request.body.content,
+        postId = ctx.params.postId,
+        res_comments,
+        time = moment().format('YYYY-MM-DD HH:mm:ss'),
+        avator;
+    await userModel.findUserData(ctx.session.user)
+        .then(res => {
+            console.log(res[0]['avator'])
+            avator = res[0]['avator']
+        })   
+    await userModel.insertComment([name, md.render(content),time, postId,avator])
+    await userModel.findDataById(postId)
+        .then(result => {
+            res_comments = parseInt(result[0]['comments'])
+            res_comments += 1
+        })
+    await userModel.updatePostComment([res_comments, postId])
+        .then(() => {
+            ctx.body = true
+        }).catch(() => {
+            ctx.body = false
+        })
+})
+// 评论分页
+router.post('/posts/:postId/commentPage', async function(ctx){
+    let postId = ctx.params.postId,
+        page = ctx.request.body.page;
+    await userModel.findCommentByPage(page,postId)
+        .then(res=>{
+            ctx.body = res
+        }).catch(()=>{
+            ctx.body = 'error'
+        })  
+})
+// 删除评论
+router.post('/posts/:postId/comment/:commentId/remove', async(ctx, next) => {
+    let postId = ctx.params.postId,
+        commentId = ctx.params.commentId,
+        res_comments;
+    await userModel.findDataById(postId)
+        .then(result => {
+            res_comments = parseInt(result[0]['comments'])
+            //console.log('res', res_comments)
+            res_comments -= 1
+            //console.log(res_comments)
+        })
+    await userModel.updatePostComment([res_comments, postId])
+    await userModel.deleteComment(commentId)
+        .then(() => {
+            ctx.body = {
+                data: 1
+            }
+        }).catch(() => {
+            ctx.body = {
+                data: 2
+            }
+
+        })
+})
+// 删除单篇文章
+router.post('/posts/:postId/remove', async(ctx, next) => {
+    let postId = ctx.params.postId
+    await userModel.deleteAllPostComment(postId)
+    await userModel.deletePost(postId)
+        .then(() => {
+            ctx.body = {
+                data: 1
+            }
+        }).catch(() => {
+            ctx.body = {
+                data: 2
+            }
+        })
+})
+
+// 编辑单篇文章页面
+router.get('/posts/:postId/edit', async(ctx, next) => {
+    let name = ctx.session.user,
+        postId = ctx.params.postId,
+        res;
+    await userModel.findDataById(postId)
+        .then(result => {
+            res = result[0]
+            //console.log('修改文章', res)
+        })
+    await ctx.render('edit', {
+        session: ctx.session,
+        postsContent: res.md,
+        postsTitle: res.title
+    })
+
+})
+
+// post 编辑单篇文章
+router.post('/posts/:postId/edit', async(ctx, next) => {
+    let title = ctx.request.body.title,
+        content = ctx.request.body.content,
+        id = ctx.session.id,
+        postId = ctx.params.postId,
+         // 现在使用markdown不需要单独转义
+        newTitle = title.replace(/[<">']/g, (target) => {
+            return {
+                '<': '&lt;',
+                '"': '&quot;',
+                '>': '&gt;',
+                "'": '&#39;'
+            }[target]
+        }),
+        newContent = content.replace(/[<">']/g, (target) => {
+            return {
+                '<': '&lt;',
+                '"': '&quot;',
+                '>': '&gt;',
+                "'": '&#39;'
+            }[target]
+        });
+    await userModel.updatePost([newTitle, md.render(content), content, postId])
+        .then(() => {
+            ctx.body = true
+        }).catch(() => {
+            ctx.body = false
+        })
+})
 
 module.exports = router

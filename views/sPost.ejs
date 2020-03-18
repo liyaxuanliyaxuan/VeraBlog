@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>VeraBlog</title>
+	<link rel="icon" href="/images/19n5hnxh3i41583028504529.png">
+	<link rel="stylesheet" href="/index.css">
+	<script src="https://unpkg.com/jquery@3.3.1/dist/jquery.min.js"></script>
+	<script>
+		function fade(txt){
+			$('.message').text(txt)
+			$('.message').animate({
+				top:0
+			})
+			setTimeout(function(){
+				$('.message').animate({
+					top: '-100%'
+				})
+			},1500)
+		}
+		$(function(){
+			$('.signout').click(()=>{
+				$.ajax({
+					url: "/signout",
+					type: "GET",
+					cache: false,
+					dataType: 'json',
+					success: function (msg) {
+						if (msg) {
+							fade('退出成功')
+							setTimeout(()=>{
+								window.location.href = "/posts"
+							},1500)	
+						}
+					},
+					error: function () {
+						alert('异常');
+					}
+				})
+			})
+		})
+	</script>
+</head>
+<body>
+    <%- include("header",{type:''}) %>
+	<div class="container">
+		<ul class="posts spost">
+			<li>
+				<div class="author">
+					<span title="<%= posts.name %>"><a href="/posts?author=<%= posts.name %> ">author: <%= posts.name %></a></span>
+					<span>评论数：<%= posts.comments %></span>
+					<span>浏览量：<%= posts.pv %></span>
+				</div>
+				<div class="comment_pv">
+					<span><%= posts.moment %></span>
+				</div>
+				<a href="/posts/<%= posts.id %>">
+					<div class="title">
+						<img class="userAvator" src="../images/<%= posts.avator %>.png">
+						<%= posts.title %>
+					</div>
+					<div class="content markdown">
+						<%- posts.content %>
+					</div>
+				</a>
+				<div class="edit">
+					<% if(session && session.user ===  posts.name  ){ %>
+					<p><a href="<%= posts['id'] %>/edit">编辑</a></p>
+					<p><a class="delete_post">删除</a></p>
+					<% } %>
+				</div>
+			</li>
+		</ul>
+	</div>
+	<div class="comment_wrap">
+		<% if(session.user){ %>
+		<form class="form" method="post" action="/<%= posts.id %>">
+			<textarea id="spContent" name="content" cols="82"></textarea>
+			<div class="submit">发表留言</div>
+		</form>
+		<% } else{ %>
+			<p class="tips">登录之后才可以评论哟</p>
+		<% } %>
+		<% if (commentPageLenght > 0) { %>
+		<div class="comment_list markdown">
+			<% pageOne.forEach(function(res){ %>
+				<div class="cmt_lists">
+					<div class="cmt_content">
+						<div class="userMsg">
+							<img src="../images/<%= res['avator'] %>.png" alt=""><span><%= res['name'] %></span>
+						</div>
+						<div class="cmt_detail">
+							<%- res['content'] %>
+						</div>
+						<span class="cmt_time"><%= res['moment'] %></span>
+						<span class="cmt_name">
+							<% if(session && session.user ===  res['name']){ %>
+								<a class="delete_comment" href="javascript:delete_comment(<%= res['id'] %>);"> 删除</a>
+							<% } %>
+						</span>
+					</div>
+				</div>
+			<% }) %>
+		</div>	
+		<% } else{ %>
+			<p class="tips">还没有评论，赶快去评论吧！</p>
+		<% } %>
+		<div style="margin-top: 30px" class="pagination" id="page"></div>	
+	</div>
+	<script src="http://www.wclimb.site/pagination/pagination.js"></script>
+	<script>
+		var userName = "<%- session.user %>"
+		pagination({
+			selector: '#page',
+			totalPage: <%= commentPageLenght %>,
+			currentPage: 1,
+			prev: '上一页',
+			next: '下一页',
+			first: true,
+			last: true,
+			showTotalPage:true,
+			count: 2//当前页前面显示的数量
+		},function(val){
+			// 当前页
+			var _comment = ''
+			$.ajax({
+				url: "<%= posts.id %>/commentPage",
+				type: 'POST',
+				data:{
+					page: val
+				},
+				cache: false,
+				success: function (msg) {
+					//console.log(msg)
+					_comment = ''
+					if (msg != 'error') {
+						$('.comment_list').html(' ')
+						$.each(msg,function(i,val){
+							//console.log(val.content)
+							_comment += '<div class=\"cmt_lists\"><div class=\"cmt_content\"><div class=\"userMsg\"><img src = \"../images/'+ val.avator +'.png\" ><span>'+ val.name +'</span></div ><div class="cmt_detail">'+ val.content + '</div><span class=\"cmt_time\">'+ val.moment +'</span><span class=\"cmt_name\">';
+								if (val.name == userName) {
+									_comment += '<a class=\"delete_comment\" href=\"javascript:delete_comment('+ val.id +');\"> 删除</a>'
+								}
+							_comment += '</span></div></div>'
+						})
+						$('.comment_list').append(_comment)
+					}else{
+						alert('分页不存在')
+					} 
+				}
+			})
+		
+		})
+		
+		// 删除文章
+		$('.delete_post').click(() => {
+			$.ajax({
+				url: "<%= posts.id %>/remove",
+				type: 'POST',
+				cache: false,
+				success: function (msg) {
+					if (msg.data == 1) {
+						fade('删除文章成功')
+						setTimeout(() => {
+							window.location.href = "/posts"
+						}, 1000)
+					} else if (msg.data == 2) {
+						fade('删除文章失败');
+						setTimeout(() => {
+							window.location.reload()
+						}, 1000)
+					}
+				}
+			})
+		})
+		// 评论
+		var isAllow = true
+		$('.submit').click(function(){
+			if (!isAllow) return
+			isAllow = false
+			if ($('textarea').val().trim() == '') {
+				fade('请输入评论！')
+			}else{
+				$.ajax({
+					url: '/' + location.pathname.split('/')[2],
+					data:$('.form').serialize(),
+					type: "POST",
+					cache: false,
+					dataType: 'json',
+					success: function (msg) {
+						if (msg) {
+							fade('发表留言成功')							
+							setTimeout(()=>{
+								isAllow = true
+								window.location.reload()
+							},1500)  	
+						}
+					},
+					error: function () {
+						alert('异常');
+					}
+				})
+			}
+		})
+		// 删除评论
+		function delete_comment(id) {
+			$.ajax({
+				url: "<%= posts.id %>/comment/" + id + "/remove",
+				type: 'POST',
+				cache: false,
+				success: function (msg) {
+					if (msg.data == 1) {
+						fade('删除留言成功')
+						setTimeout(() => {
+							window.location.reload()
+						}, 1000)
+					} else if (msg.data == 2) {
+						fade('删除留言失败');
+						setTimeout(() => {
+							window.location.reload()
+						}, 1500)
+					}
+				},
+				error: function () {
+					alert('异常')
+				}
+			})
+		}
+    </script>
+</body>
+</html>

@@ -19,7 +19,7 @@
 
 #配置KOA基本的入口文件
 
-- session配置：使用中间件，自动在数据库中建立一个名为`_mysql_session_store`的表，储存sessions
+- session配置：使用中间件，自动在数据库中建立一个名为`_mysql_session_store`的表，储存sessions；设置发送给请求方的_id
 - 缓存配置：koa-static基于核心模块server-static，根据传入指定的文件目录比对请求资源的url，如果文件不存在，直接跳转到下一个中间件
 - 使用post数据解析中间件：把koa2上下文的formData数据解析到ctx.request.body中
 - 模板引擎配置：
@@ -70,3 +70,11 @@
 - 处理文章：replace方法
   1. pattern：regexp|substr
   2. replacement：newSubStr|function（函数默认参数是模式匹配下的命中目标）
+- 数据库插入中文时编码错误，修改数据表的编码为utf8![1584520735098](C:\Users\liyax\AppData\Roaming\Typora\typora-user-images\1584520735098.png)
+- 
+
+#### TODO
+
+- 上传和下载
+- 样式布局
+- 更多的性能优化点
