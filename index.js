@@ -53,6 +53,8 @@ app.use(require('./routers/signin.js').routes())
 app.use(require('./routers/signup.js').routes())
 app.use(require('./routers/posts.js').routes())
 app.use(require('./routers/signout.js').routes())
+//增加页面用于上传和下载功能的测试
+app.use(require('./routers/upload.js').routes())
 
 app.listen(3000)
 

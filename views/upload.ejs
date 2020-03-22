@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>VeraBlog</title>
+    <link rel="icon" href="/images/19n5hnxh3i41583028504529.png">
+    <link rel="stylesheet" href="/index.css">
+    <script src="https://unpkg.com/jquery@3.3.1/dist/jquery.min.js"></script>
+    <script>
+        function fade(txt) {
+            $('.message').text(txt)
+            $('.message').animate({
+                top: 0
+            })
+            setTimeout(function () {
+                $('.message').animate({
+                    top: '-100%'
+                })
+            }, 1500)
+        }
+        $(function () {
+            $('.signout').click(() => {
+                $.ajax({
+                    url: "/signout",
+                    type: "GET",
+                    cache: false,
+                    dataType: 'json',
+                    success: function (msg) {
+                        if (msg) {
+                            fade('退出成功')
+                            setTimeout(() => {
+                                window.location.href = "/posts"
+                            }, 1500)
+                        }
+                    },
+                    error: function () {
+                        alert('异常');
+                    }
+                })
+            })
+        })
+    </script>
+</head>
+
+<body>
+    <%- include("header",{type:'upload'}) %>
+    <p class='upload-by-form'>普通表单上传文件</p>
+    <form action="/upload" enctype="multipart/form-data" method="POST">
+        <label for="file-a">上传单个文件</label><input type="file" name='file-a' />
+        <label for="file-b">上传多个文件</label><input type='file' name='file-b' multiple />
+        <label for="title">文件名</label><input type="text" name="title" id="" value>
+        <button type="submit">submit</button>
+    </form>
+    <p class='upload-by-precode'>前端编码上传文件</p>
+    <p class='upload-by-formdata'>FormData异步上传</p>
+    <div class="formdata-file-filed">
+        <input type="text" name="title" id="" value="" class="form-data-title">
+        <input type="file" name="file-c" id="" class='form-data-file-c'>
+        <button type="button">submit</button>
+    </div>
+    <p>解决IE低版本不支持formData问题，采用iframe+form上传</p>
+    <p>使用拖拽的方式读取文件</p>
+    <div class="img-container">
+        drop your image here
+    </div>
+    <p>使用粘贴的方式获取文件</p>
+    <div contenteditable="true" class="paste-container" id='editor'>
+        hello, paste your image here
+    </div>
+
+    <script>
+        //普通表单上传文件
+        const inputSingleFile = document.getElementsByTagName('input')[0]
+        const inputFiles = document.getElementsByTagName('input')[1];
+        const inputText = document.getElementsByTagName('input')[2];
+        inputSingleFile.addEventListener('change', handleSubmitFile)
+        inputFiles.addEventListener('change', handleSubmitFile)
+        inputText.addEventListener('change', (e) => {
+            this.value = e.target.value
+            console.log(this.value);
+        })
+        function handleSubmitFile() {
+            const fileList = this.files
+            console.log(fileList);
+            console.log(this.value);
+        }
+        //上传base64格式图片：base64 -> blob -> formData
+        var b64toBlob = require('b64-to-blob');
+        //         let blob = b64toBlob(b64Data, "image/png"),
+        //     formData = new FormData();
+        // formData.append("fileContent", blob);
+
+        //fileReader + formData
+        $('.form-data-title').on('change', function () {
+
+        })
+        $('.form-data-file-c').on('change', function () {
+            let fileReader = new FileReader(),
+                fileType = this.files[0].type
+            fileReader.onload = function () {
+                console.log('read done');
+                console.log(this.result);
+                // let buffer = this.result;
+                // // 依次每字节8位读取，放到一个整数数组
+                // let view = new Uint8Array(buffer);
+                // console.log(view);
+                if (/^image\/[jpeg|png|gif]/.test(fileType)) {
+                    console.log('is a pic');
+
+                    $(`<img src="${this.result}">`).appendTo(".formdata-file-filed");
+                }
+            }
+            console.log(this.files[0]);
+            fileReader.readAsDataURL(this.files[0]);
+            // 按base64的方式读取，结果是base64，任何文件都可转成base64的形式
+            //fileReader.readAsDataURL(this.files[0]);
+
+            // 以二进制字符串方式读取，结果是二进制内容的utf-8形式，已被废弃了
+            //fileReader.readAsBinaryString(this.files[0]);
+
+            // 以原始二进制方式读取，读取结果可直接转成整数数组
+            //fileReader.readAsArrayBuffer(this.files[0]);
+        })
+        ////使用原始的ajax操作
+        ////使用jq操作
+        //使用拖拽获取文件对象
+        $(".img-container").on("dragover", function (event) {
+            event.preventDefault();
+        })
+            .on("drop", function (event) {
+                event.preventDefault();
+                // 数据在event的dataTransfer对象里
+                let file = event.originalEvent.dataTransfer.files[0];
+                console.log(file);
+
+                // 然后就可以使用FileReader进行操作
+                //fileReader.readAsDataURL(file);
+
+                // 或者是添加到一个FormData
+                let formData = new FormData();
+                //formData.append("fileContent", file);
+            })
+        //使用粘贴的方式获取文件
+        $("#editor").on("paste", function (event) {
+            let file = event.originalEvent.clipboardData.files[0];
+            console.log(file);//chrome表现为在输入框里增加一张图片
+        });
+    </script>
+</body>
+
+</html>

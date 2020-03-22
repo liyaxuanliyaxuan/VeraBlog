@@ -24,5 +24,9 @@
     "mocha": "^7.1.0",
     "moment": "^2.24.0",
     "mysql": "^2.18.1"
+  },
+  "dependencies": {
+    "b64-to-blob": "^1.2.19",
+    "busboy": "^0.3.1"
   }
 }

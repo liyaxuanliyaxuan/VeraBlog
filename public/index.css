@@ -358,3 +358,9 @@ a:hover {
     list-style: circle;
     margin-top: 5px;
 }
+.paste-container,.img-container{
+
+    width: 100px;
+    height: 100px;
+    border: #1E9FFF solid 1px ;
+}

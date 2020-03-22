@@ -71,6 +71,7 @@
   1. pattern：regexp|substr
   2. replacement：newSubStr|function（函数默认参数是模式匹配下的命中目标）
 - 数据库插入中文时编码错误，修改数据表的编码为utf8![1584520735098](C:\Users\liyax\AppData\Roaming\Typora\typora-user-images\1584520735098.png)
+- 在使用const，let给函数表达式赋值，没有function所具有的变量声明的提升过程
 - 
 
 #### TODO
