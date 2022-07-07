@@ -22,7 +22,7 @@
     "markdown-it": "^10.0.0",
     "md5": "^2.2.1",
     "mocha": "^7.1.0",
-    "moment": "^2.24.0",
+    "moment": "^2.29.4",
     "mysql": "^2.18.1"
   },
   "dependencies": {
